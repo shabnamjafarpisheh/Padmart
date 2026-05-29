@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Padmart — Owner Dashboard</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="store.js"></script>
+<style>
+:root{--wine:#6d1f2a;--gold:#b88a4a;--muted:#7f6b62;--line:#e7d8c6;--paper:#fffaf3;--ink:#241817}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;
+  background:radial-gradient(circle at top right,rgba(109,31,42,.07),transparent 28%),
+             linear-gradient(135deg,#f6ecdf 0%,#fbf7f0 50%,#f1e2d2 100%)}
+body.rtl{direction:rtl;font-family:'Vazirmatn',sans-serif}
+.display{font-family:'Playfair Display',serif;font-weight:700}
+.lang-pill{display:inline-flex;background:#f0e4d4;border-radius:99px;padding:3px;gap:2px}
+.lang-btn{padding:5px 14px;border-radius:99px;border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s}
+.lang-btn.active{background:var(--wine);color:#fff}
+.field{width:100%;border:1px solid var(--line);background:#fffdf9;border-radius:12px;padding:12px 14px;outline:none;font-family:inherit;font-size:14px;color:var(--ink);transition:.2s}
+.field:focus{border-color:var(--wine);box-shadow:0 0 0 3px rgba(109,31,42,.1)}
+.pnav{display:flex;gap:0;border-bottom:2px solid var(--line);overflow-x:auto}
+.pnav-btn{padding:11px 20px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap}
+.pnav-btn.active{color:var(--wine);border-bottom-color:var(--wine)}
+.pg{display:none}.pg.active{display:block}
+.stat-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:center}
+.chart-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 6px 20px rgba(72,16,25,.05)}
+.msg{border-radius:12px;padding:11px 15px;font-size:13px;font-weight:500;margin-top:10px}
+.msg-s{background:#e8f3ec;color:#2d6b4f}.msg-e{background:#f8e5e3;color:#8b2d36}
+.res-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;box-shadow:0 4px 14px rgba(72,16,25,.04)}
+.res-card.cancelled{opacity:.6}
+.owner-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#b88a4a,#8a6030);color:#fff;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px}
+.hero-wrap{position:relative;overflow:hidden;border-radius:24px;min-height:200px}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-ov{position:absolute;inset:0;background:linear-gradient(90deg,rgba(36,24,23,.88),rgba(36,24,23,.35) 60%,rgba(36,24,23,.08))}
+.hero-ct{position:relative;z-index:2;padding:32px 40px;color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .45s ease both}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav style="background:rgba(255,249,240,.96);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)">
+  <div style="max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">🎭</span>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="display" style="font-size:16px;color:var(--wine)">Padmart</span>
+          <span class="owner-badge">Owner</span>
+        </div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)" id="nsub">Full Dashboard</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="lang-pill">
+        <button class="lang-btn active" onclick="setL('en')">EN</button>
+        <button class="lang-btn" onclick="setL('fa')">FA</button>
+      </div>
+      <a href="index.html" onclick="Store.ownerLogout()" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 12px" id="nexit">Exit</a>
+    </div>
+  </div>
+</nav>
+
+<div style="max-width:960px;margin:0 auto;padding:20px 16px 60px">
+
+  <!-- HERO -->
+  <div class="hero-wrap fade" style="margin-bottom:20px;box-shadow:0 18px 48px rgba(72,16,25,.16)">
+    <img class="hero-img" src="https://images.unsplash.com/photo-1503095396549-807759245b35?w=1400&q=80&fit=crop" alt="Theater" onerror="this.style.display='none'">
+    <div class="hero-ov"></div>
+    <div class="hero-ct">
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;background:var(--gold);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#fff;margin-bottom:12px">👑 Owner Dashboard</div>
+      <h1 class="display" style="font-size:28px;line-height:1.1;margin-bottom:6px" id="htitle">Full Control. All Reservations.</h1>
+      <p style="font-size:13px;color:rgba(255,255,255,.78)" id="hdesc">Manage all bookings, view live analytics and configure settings.</p>
+    </div>
+  </div>
+
+  <!-- PAGE NAV -->
+  <div class="pnav" style="margin-bottom:0">
+    <button class="pnav-btn active" onclick="showPg('dash')" id="pn-dash">📊 Dashboard</button>
+    <button class="pnav-btn" onclick="showPg('allres')" id="pn-allres">📋 All Reservations</button>
+    <button class="pnav-btn" onclick="showPg('settings')" id="pn-settings">⚙️ Settings</button>
+  </div>
+
+  <!-- ════════ PAGE: DASHBOARD ════════ -->
+  <div id="pg-dash" class="pg active" style="padding-top:24px">
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div class="stat-card"><div class="display" style="font-size:32px;color:var(--wine)" id="st-total">0</div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250;margin-top:6px" id="lbl-total">Total Bookings</div></div>
+      <div class="stat-card"><div class="display" style="font-size:32px;color:var(--wine)" id="st-active">0</div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250;margin-top:6px" id="lbl-active">Active</div></div>
+      <div class="stat-card"><div class="display" style="font-size:28px;color:var(--wine)" id="st-rev">0</div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250;margin-top:6px" id="lbl-rev">Revenue (تومان)</div></div>
+      <div class="stat-card"><div class="display" style="font-size:32px;color:var(--wine)" id="st-guests">0</div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250;margin-top:6px" id="lbl-guests">Unique Guests</div></div>
+    </div>
+    <!-- Charts -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div class="chart-card"><p style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250;margin-bottom:14px" id="lbl-cbar">Bookings by Guest</p><canvas id="chart-bar" height="200"></canvas></div>
+      <div class="chart-card"><p style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250;margin-bottom:14px" id="lbl-cpie">Hall Usage</p><canvas id="chart-pie" height="200"></canvas></div>
+      <div class="chart-card"><p style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250;margin-bottom:14px" id="lbl-cline">Bookings Over Time</p><canvas id="chart-line" height="200"></canvas></div>
+    </div>
+  </div><!-- /pg-dash -->
+
+  <!-- ════════ PAGE: ALL RESERVATIONS ════════ -->
+  <div id="pg-allres" class="pg" style="padding-top:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+      <div>
+        <p style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:3px" id="ar-eyebrow">All Guest Reservations</p>
+        <h2 class="display" style="font-size:24px" id="ar-title">Reservation Manager</h2>
+      </div>
+      <input id="ar-filter" class="field" style="max-width:260px" type="text" placeholder="Search name or email…" oninput="renderOwnerRes()">
+    </div>
+    <div id="ar-empty" style="background:var(--paper);border:2px dashed #d7c5b4;border-radius:20px;padding:48px 20px;text-align:center;display:none">
+      <div style="font-size:36px;margin-bottom:10px">🎟</div>
+      <div class="display" style="font-size:20px;margin-bottom:6px" id="ar-et">No Reservations Yet</div>
+      <div style="font-size:13px;color:var(--muted)" id="ar-es">Guest bookings will appear here.</div>
+    </div>
+    <div id="ar-list"></div>
+  </div><!-- /pg-allres -->
+
+  <!-- ════════ PAGE: SETTINGS ════════ -->
+  <div id="pg-settings" class="pg" style="padding-top:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <!-- Change password -->
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:24px">
+        <p style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:4px" id="sp-ey">Security</p>
+        <h3 class="display" style="font-size:20px;margin-bottom:16px" id="sp-tt">Change Owner Password</h3>
+        <input id="np1" class="field" style="margin-bottom:10px" type="password" placeholder="New password">
+        <input id="np2" class="field" style="margin-bottom:12px" type="password" placeholder="Confirm new password">
+        <div id="pmsg" style="display:none" class="msg"></div>
+        <button onclick="changePass()" style="width:100%;margin-top:8px;padding:13px;border-radius:14px;background:var(--wine);color:#fff;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer" id="sp-btn">Save Password</button>
+      </div>
+
+      <!-- SMTP -->
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:24px">
+        <p style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:4px" id="se-ey">Email Settings</p>
+        <h3 class="display" style="font-size:20px;margin-bottom:16px" id="se-tt">SMTP Configuration</h3>
+        <input id="smtp-host" class="field" style="margin-bottom:10px" type="text" placeholder="smtp.gmail.com">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <input id="smtp-port" class="field" type="number" placeholder="587" value="587">
+          <input id="smtp-user" class="field" type="email" placeholder="you@gmail.com">
+        </div>
+        <input id="smtp-pass" class="field" style="margin-bottom:8px" type="password" placeholder="App Password">
+        <p style="font-size:11px;color:#9b7250;margin-bottom:12px" id="se-note">Gmail: 2-Step Verification → App Passwords → Mail → Generate.</p>
+        <div id="smsg" style="display:none" class="msg"></div>
+        <button onclick="saveSmtp()" style="width:100%;padding:13px;border-radius:14px;background:var(--wine);color:#fff;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer" id="se-btn">Save Email Settings</button>
+      </div>
+
+    </div>
+  </div><!-- /pg-settings -->
+
+</div>
+
+<!-- CANCEL MODAL -->
+<div id="modal" style="position:fixed;inset:0;background:rgba(36,24,23,.55);display:none;align-items:center;justify-content:center;z-index:999;padding:20px">
+  <div style="background:var(--paper);border-radius:24px;padding:34px 30px;max-width:400px;width:100%;box-shadow:0 24px 60px rgba(36,24,23,.22)">
+    <div style="font-size:34px;text-align:center;margin-bottom:12px">↩️</div>
+    <h3 class="display" style="font-size:22px;text-align:center;margin-bottom:8px" id="modt">Cancel Reservation?</h3>
+    <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:22px;line-height:1.7" id="modd"></p>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeModal()" style="flex:1;padding:12px;border-radius:12px;background:#f5eadf;border:none;font-family:inherit;font-weight:600;color:#5e4d46;cursor:pointer;font-size:13px" id="modk">Keep It</button>
+      <button onclick="doCancel()" style="flex:1;padding:12px;border-radius:12px;background:#f2e2e0;border:none;font-family:inherit;font-weight:600;color:#7b2932;cursor:pointer;font-size:13px" id="modc">Yes, Cancel & Refund</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// guard: redirect if not logged in
+if (!Store.isOwnerIn()) location.href = 'owner-login.html';
+
+const LG={
+  en:{nsub:'Full Dashboard',nexit:'Exit',htitle:'Full Control. All Reservations.',hdesc:'Manage all bookings, view live analytics and configure settings.',pnDash:'📊 Dashboard',pnAllres:'📋 All Reservations',pnSettings:'⚙️ Settings',lblTotal:'Total Bookings',lblActive:'Active',lblRev:'Revenue (تومان)',lblGuests:'Unique Guests',lblCbar:'Bookings by Guest',lblCpie:'Hall Usage',lblCline:'Bookings Over Time',arEyebrow:'All Guest Reservations',arTitle:'Reservation Manager',arEt:'No Reservations Yet',arEs:'Guest bookings will appear here.',spEy:'Security',spTt:'Change Owner Password',spBtn:'Save Password',seEy:'Email Settings',seTt:'SMTP Configuration',seNote:'Gmail: 2-Step Verification → App Passwords → Mail → Generate.',seBtn:'Save Email Settings',modt:'Cancel Reservation?',modk:'Keep It',modc:'Yes, Cancel & Refund',stActive:'✓ Confirmed',stCancelled:'✕ Cancelled',lGuest:'Guest',lDate:'Date',lSlot:'Time Slot',lDur:'Duration',lPaid:'Amount Paid',cancelBtn:'Cancel & Refund',refundedBtn:'Refunded',noteActive:'You can cancel on behalf of the guest.',noteCancelled:'Refunded.',okPass:'✓ Password updated.',errPassMismatch:'⚠ Passwords do not match.',errPassShort:'⚠ Min 6 characters.',okSmtp:'✓ Email settings saved.'},
+  fa:{nsub:'داشبورد کامل',nexit:'خروج',htitle:'کنترل کامل. همه رزروها.',hdesc:'تمام رزروها را مدیریت کنید، آمار زنده ببینید و تنظیمات را پیکربندی کنید.',pnDash:'📊 داشبورد',pnAllres:'📋 همه رزروها',pnSettings:'⚙️ تنظیمات',lblTotal:'کل رزروها',lblActive:'فعال',lblRev:'درآمد (تومان)',lblGuests:'مهمانان یکتا',lblCbar:'رزرو به تفکیک مهمان',lblCpie:'استفاده از سالن',lblCline:'روند رزرو',arEyebrow:'همه رزروهای مهمانان',arTitle:'مدیریت رزروها',arEt:'هنوز رزروی ثبت نشده',arEs:'رزروهای مهمانان اینجا نمایش داده می‌شود.',spEy:'امنیت',spTt:'تغییر رمز عبور مدیر',spBtn:'ذخیره رمز عبور',seEy:'تنظیمات ایمیل',seTt:'پیکربندی SMTP',seNote:'Gmail: تأیید دو مرحله‌ای ← رمزهای اپ ← ایمیل ← ایجاد کنید.',seBtn:'ذخیره تنظیمات ایمیل',modt:'لغو رزرو؟',modk:'نگه داشتن',modc:'بله، لغو و بازپرداخت',stActive:'✓ تأیید شده',stCancelled:'✕ لغو شده',lGuest:'مهمان',lDate:'تاریخ',lSlot:'بازه زمانی',lDur:'مدت',lPaid:'مبلغ پرداختی',cancelBtn:'لغو و بازپرداخت',refundedBtn:'بازپرداخت شد',noteActive:'می‌توانید به نمایندگی از مهمان لغو کنید.',noteCancelled:'بازپرداخت شده.',okPass:'✓ رمز عبور به‌روز شد.',errPassMismatch:'⚠ رمزها یکسان نیستند.',errPassShort:'⚠ حداقل ۶ کاراکتر.',okSmtp:'✓ تنظیمات ایمیل ذخیره شد.'}
+};
+
+let lang=Store.getLang();
+let pendingId=null;
+let barC,pieC,lineC;
+
+const t=k=>LG[lang][k]||k;
+
+function applyL(l){
+  lang=l;
+  document.body.classList.toggle('rtl',l==='fa');
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&l==='en')||(i===1&&l==='fa')));
+  const map={nsub:'nsub',nexit:'nexit','pn-dash':'pnDash','pn-allres':'pnAllres','pn-settings':'pnSettings',htitle:'htitle',hdesc:'hdesc','st-total':'','st-active':'','lbl-total':'lblTotal','lbl-active':'lblActive','lbl-rev':'lblRev','lbl-guests':'lblGuests','lbl-cbar':'lblCbar','lbl-cpie':'lblCpie','lbl-cline':'lblCline','ar-eyebrow':'arEyebrow','ar-title':'arTitle','ar-et':'arEt','ar-es':'arEs','sp-ey':'spEy','sp-tt':'spTt','sp-btn':'spBtn','se-ey':'seEy','se-tt':'seTt','se-note':'seNote','se-btn':'seBtn',modt:'modt',modk:'modk',modc:'modc'};
+  Object.entries(map).forEach(([id,key])=>{if(!key)return;const e=document.getElementById(id);if(e)e.textContent=t(key);});
+  renderDash();renderOwnerRes();
+}
+function setL(l){Store.setLang(l);applyL(l);}
+
+function showPg(p){
+  ['dash','allres','settings'].forEach(x=>{
+    document.getElementById('pg-'+x).classList.toggle('active',x===p);
+    document.getElementById('pn-'+x).classList.toggle('active',x===p);
+  });
+  if(p==='dash')renderDash();
+  if(p==='allres')renderOwnerRes();
+}
+
+// ── DASHBOARD ──
+function renderDash(){
+  const all=Store.getReservations();
+  const active=all.filter(r=>r.status==='active');
+  const rev=active.reduce((s,r)=>s+r.price,0);
+  const guests=new Set(all.map(r=>r.email)).size;
+  document.getElementById('st-total').textContent=all.length;
+  document.getElementById('st-active').textContent=active.length;
+  document.getElementById('st-rev').textContent=rev.toLocaleString();
+  document.getElementById('st-guests').textContent=guests;
+
+  // bar: by guest name
+  const nc={};active.forEach(r=>{nc[r.name]=(nc[r.name]||0)+1;});
+  // pie: by hall
+  const grand=active.filter(r=>r.hall==='grand').length;
+  const s2=active.filter(r=>r.hall==='studio2').length;
+  // line: by date
+  const dc={};active.forEach(r=>{dc[r.date]=(dc[r.date]||0)+1;});
+  const ll=Object.keys(dc).sort();
+
+  const tk='#7f6b62',grid='rgba(231,216,198,.5)';
+
+  if(barC)barC.destroy();
+  barC=new Chart(document.getElementById('chart-bar'),{type:'bar',data:{labels:Object.keys(nc),datasets:[{data:Object.values(nc),backgroundColor:'rgba(109,31,42,.75)',borderColor:'#6d1f2a',borderWidth:1,borderRadius:7}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:tk,font:{size:10}},grid:{display:false}},y:{ticks:{color:tk,stepSize:1},grid:{color:grid},beginAtZero:true}}}});
+
+  if(pieC)pieC.destroy();
+  pieC=new Chart(document.getElementById('chart-pie'),{type:'doughnut',data:{labels:[lang==='fa'?'گرند استودیو':'Grand Studio',lang==='fa'?'استودیو ۲':'Studio 2'],datasets:[{data:[grand,s2],backgroundColor:['rgba(109,31,42,.8)','rgba(184,138,74,.8)'],borderColor:['#6d1f2a','#b88a4a'],borderWidth:2}]},options:{cutout:'52%',plugins:{legend:{position:'bottom',labels:{color:tk,font:{size:11},padding:10}}}}});
+
+  if(lineC)lineC.destroy();
+  lineC=new Chart(document.getElementById('chart-line'),{type:'line',data:{labels:ll,datasets:[{data:ll.map(d=>dc[d]),borderColor:'#6d1f2a',borderWidth:2.5,backgroundColor:'rgba(109,31,42,.08)',pointBackgroundColor:'#6d1f2a',pointRadius:5,fill:true,tension:.35}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:tk,font:{size:9}},grid:{display:false}},y:{ticks:{color:tk,stepSize:1},grid:{color:grid},beginAtZero:true}}}});
+}
+
+// ── ALL RESERVATIONS ──
+function renderOwnerRes(){
+  const q=(document.getElementById('ar-filter').value||'').toLowerCase();
+  const all=Store.getReservations().filter(r=>!q||r.name.toLowerCase().includes(q)||r.email.includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+  const empty=document.getElementById('ar-empty');
+  const list=document.getElementById('ar-list');
+  empty.style.display=Store.getReservations().length?'none':'block';
+  list.innerHTML=all.map(r=>{
+    const c=r.status==='cancelled';
+    const hn=lang==='fa'?r.hallFa:r.hallEn;
+    const stCls=c?'background:#f2e2e0;color:#8b2d36':'background:#e7f3ec;color:#2d7a58';
+    return `<div class="res-card${c?' cancelled':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250;margin-bottom:3px">${r.id}</div>
+          <div class="display" style="font-size:18px;color:#2b1c19;margin-bottom:4px">${hn}</div>
+          <span style="display:inline-flex;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;${stCls}">${c?t('stCancelled'):t('stActive')}</span>
+        </div>
+        <div class="display" style="font-size:20px;color:var(--wine)">${Store.fmt(r.price)}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;font-size:12px">
+        <div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9b7250">${t('lGuest')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.name}</div></div>
+        <div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9b7250">Email</div><div style="margin-top:2px;font-weight:500;color:#4b3932;word-break:break-all">${r.email}</div></div>
+        <div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9b7250">${t('lDate')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.date}</div></div>
+        <div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9b7250">${t('lSlot')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.slotLabel}</div></div>
+        <div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9b7250">${t('lDur')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.duration}h</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #eee0d3">
+        <span style="font-size:11px;color:var(--muted)">${c?t('noteCancelled'):t('noteActive')}</span>
+        <button ${c?'disabled style="opacity:.45;cursor:not-allowed"':'onclick="openModal(\''+r.id+'\')"'} style="padding:7px 14px;border-radius:9px;background:#f2e2e0;border:none;font-family:inherit;font-size:12px;font-weight:600;color:#7b2932;${c?'':'cursor:pointer'}">${c?t('refundedBtn'):t('cancelBtn')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ──
+function openModal(id){
+  pendingId=id;
+  const r=Store.getReservations().find(x=>x.id===id);
+  const hn=lang==='fa'?r.hallFa:r.hallEn;
+  document.getElementById('modd').innerHTML=`${hn} · ${r.date}<br>${r.slotLabel} (${r.duration}h) — ${r.name}<br><span style="color:var(--muted)">Refund: <strong style="color:var(--wine)">${Store.fmt(r.price)}</strong></span>`;
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal(){document.getElementById('modal').style.display='none';pendingId=null;}
+function doCancel(){if(!pendingId)return;Store.cancelReservation(pendingId);closeModal();renderDash();renderOwnerRes();}
+
+// ── SETTINGS ──
+function showMsg(id,txt,type){const e=document.getElementById(id);e.textContent=txt;e.className='msg msg-'+type;e.style.display='block';setTimeout(()=>e.style.display='none',4000);}
+function changePass(){
+  const p1=document.getElementById('np1').value,p2=document.getElementById('np2').value;
+  if(p1.length<6)return showMsg('pmsg',t('errPassShort'),'e');
+  if(p1!==p2)return showMsg('pmsg',t('errPassMismatch'),'e');
+  Store.setOwnerPass(p1);document.getElementById('np1').value='';document.getElementById('np2').value='';
+  showMsg('pmsg',t('okPass'),'s');
+}
+function saveSmtp(){
+  Store.setSmtp({host:document.getElementById('smtp-host').value.trim(),port:parseInt(document.getElementById('smtp-port').value)||587,user:document.getElementById('smtp-user').value.trim(),pass:document.getElementById('smtp-pass').value});
+  showMsg('smsg',t('okSmtp'),'s');
+}
+
+// ── LIVE UPDATE ──
+window.addEventListener('pm_update',()=>{renderDash();renderOwnerRes();});
+window.addEventListener('pm_lang',()=>applyL(Store.getLang()));
+
+applyL(lang);
+lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Padmart — Book a Hall</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="store.js"></script>
+<style>
+:root{--wine:#6d1f2a;--gold:#b88a4a;--muted:#7f6b62;--line:#e7d8c6;--paper:#fffaf3;--ink:#241817}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;
+  background:radial-gradient(circle at top right,rgba(109,31,42,.07),transparent 28%),
+             linear-gradient(135deg,#f6ecdf 0%,#fbf7f0 50%,#f1e2d2 100%)}
+body.rtl{direction:rtl;font-family:'Vazirmatn',sans-serif}
+.display{font-family:'Playfair Display',serif;font-weight:700}
+.lang-pill{display:inline-flex;background:#f0e4d4;border-radius:99px;padding:3px;gap:2px}
+.lang-btn{padding:5px 14px;border-radius:99px;border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s}
+.lang-btn.active{background:var(--wine);color:#fff}
+.field{width:100%;border:1px solid var(--line);background:#fffdf9;border-radius:14px;padding:13px 15px;outline:none;font-family:inherit;font-size:14px;color:var(--ink);transition:.2s}
+.field:focus{border-color:var(--wine);box-shadow:0 0 0 3px rgba(109,31,42,.12)}
+select.field{appearance:auto;cursor:pointer}
+.hall-card{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fffdf9;cursor:pointer;transition:all .22s;width:100%;text-align:left}
+body.rtl .hall-card{text-align:right}
+.hall-card:hover{transform:translateY(-3px);border-color:#c8aa92}
+.hall-card.sel{border-color:var(--wine);background:#fff7f7;box-shadow:0 8px 24px rgba(109,31,42,.1)}
+/* slot grid */
+.slot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.slot-btn{padding:9px 4px;border:1px solid var(--line);border-radius:10px;background:#fffdf9;
+  font-family:inherit;font-size:12px;color:var(--ink);cursor:pointer;transition:.2s;text-align:center}
+.slot-btn:hover:not(:disabled){border-color:var(--wine);background:#fff7f7}
+.slot-btn.sel{border-color:var(--wine);background:var(--wine);color:#fff;font-weight:600}
+.slot-btn.taken{background:#f5e8e8;color:#c0a0a0;text-decoration:line-through;cursor:not-allowed;border-color:#ecd8d8}
+.slot-btn.partial{background:#fdf4e0;color:#a08030;cursor:not-allowed;border-color:#ecdbb0}
+/* dur buttons */
+.dur-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.dur-btn{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fffdf9;
+  font-family:inherit;font-size:13px;cursor:pointer;transition:.2s;color:var(--ink)}
+.dur-btn:hover{border-color:var(--wine)}
+.dur-btn.sel{border-color:var(--wine);background:var(--wine);color:#fff;font-weight:600}
+/* page nav */
+.pnav{display:flex;gap:0;border-bottom:2px solid var(--line)}
+.pnav-btn{padding:11px 22px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;
+  font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap}
+.pnav-btn.active{color:var(--wine);border-bottom-color:var(--wine)}
+.pg{display:none}.pg.active{display:block}
+/* message */
+.msg{border-radius:12px;padding:11px 15px;font-size:13px;font-weight:500;margin-top:10px}
+.msg-s{background:#e8f3ec;color:#2d6b4f}.msg-e{background:#f8e5e3;color:#8b2d36}
+/* res card */
+.res-card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:14px;box-shadow:0 6px 20px rgba(72,16,25,.05)}
+.res-card.cancelled{opacity:.62}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(36,24,23,.55);display:none;align-items:center;justify-content:center;z-index:999;padding:20px}
+.modal-bg.open{display:flex}
+/* hero */
+.hero-wrap{position:relative;overflow:hidden;border-radius:26px;min-height:260px}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-ov{position:absolute;inset:0;background:linear-gradient(90deg,rgba(36,24,23,.82),rgba(36,24,23,.28) 60%,transparent)}
+.hero-ct{position:relative;z-index:2;padding:40px 44px;color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .5s ease both}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav style="background:rgba(255,249,240,.96);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)">
+  <div style="max-width:860px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">🎭</span>
+      <div>
+        <div class="display" style="font-size:16px;color:var(--wine)" id="nb">Padmart</div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)" id="ns">Guest Booking</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="lang-pill">
+        <button class="lang-btn active" onclick="setL('en')">EN</button>
+        <button class="lang-btn" onclick="setL('fa')">FA</button>
+      </div>
+      <a href="index.html" style="font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 12px" id="nx">Exit</a>
+    </div>
+  </div>
+</nav>
+
+<div style="max-width:860px;margin:0 auto;padding:20px 16px 60px">
+
+  <!-- HERO -->
+  <div class="hero-wrap fade" style="margin-bottom:22px;box-shadow:0 18px 48px rgba(72,16,25,.16)">
+    <img class="hero-img" src="https://images.unsplash.com/photo-1503095396549-807759245b35?w=1400&q=80&fit=crop" alt="Theater" onerror="this.style.display='none'">
+    <div class="hero-ov"></div>
+    <div class="hero-ct">
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;background:var(--gold);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#fff;margin-bottom:14px" id="hbadge">🎭 Now Accepting Reservations</div>
+      <h1 class="display" style="font-size:32px;line-height:1.1;margin-bottom:8px" id="htitle">Reserve Your Stage</h1>
+      <p style="font-size:14px;color:rgba(255,255,255,.82);line-height:1.7;max-width:480px" id="hdesc">Choose your duration, pick a time slot and confirm. Full refund on cancellation.</p>
+    </div>
+  </div>
+
+  <!-- PAGE NAV -->
+  <div class="pnav" style="margin-bottom:0">
+    <button class="pnav-btn active" onclick="showPg('book')" id="pn-book">📅 Book a Hall</button>
+    <button class="pnav-btn" onclick="showPg('myres')" id="pn-myres">📋 My Reservations</button>
+  </div>
+
+  <!-- ════════ PAGE: BOOK ════════ -->
+  <div id="pg-book" class="pg active" style="padding-top:24px">
+    <div style="display:grid;grid-template-columns:1.25fr .8fr;gap:20px">
+
+      <!-- FORM -->
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:26px">
+        <p style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:4px" id="fe">Hall Reservations</p>
+        <h2 class="display" style="font-size:22px;margin-bottom:20px" id="ft">Book a Rehearsal Hall</h2>
+
+        <form id="bform" onsubmit="doBook(event)">
+          <!-- Name + Email -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:5px" id="ln">Your Name</label>
+              <input id="fn" class="field" type="text" placeholder="Sara Mohammadi">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:5px" id="le">Email</label>
+              <input id="fe2" class="field" type="email" placeholder="sara@email.com">
+            </div>
+          </div>
+
+          <!-- Date -->
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:5px" id="ld">Date</label>
+            <input id="fd" class="field" type="date">
+          </div>
+
+          <!-- Hall cards -->
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:8px" id="lh">Choose a Hall</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <button type="button" class="hall-card sel" id="hc-grand" onclick="selHall('grand')">
+                <div style="font-size:22px;margin-bottom:6px">🎪</div>
+                <div class="display" style="font-size:16px;color:var(--wine);margin-bottom:3px" id="hn-grand">Grand Studio</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:8px" id="hd-grand">120 seats · Pro lighting</div>
+                <div style="font-size:14px;font-weight:700;color:var(--wine)">150,000 تومان/hr</div>
+              </button>
+              <button type="button" class="hall-card" id="hc-studio2" onclick="selHall('studio2')">
+                <div style="font-size:22px;margin-bottom:6px">🎭</div>
+                <div class="display" style="font-size:16px;color:var(--wine);margin-bottom:3px" id="hn-s2">Studio 2</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:8px" id="hd-s2">30 seats · Mirrors</div>
+                <div style="font-size:14px;font-weight:700;color:var(--wine)">80,000 تومان/hr</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Duration -->
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px" id="ldur">Duration (hours)</label>
+            <div class="dur-grid" id="dur-grid"></div>
+          </div>
+
+          <!-- Time Slots -->
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px" id="lts">Start Time Slot</label>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:6px" id="lts-note">Green = available · Red = fully booked · Yellow = partially blocked</p>
+            <div class="slot-grid" id="slot-grid"></div>
+          </div>
+
+          <!-- Summary strip -->
+          <div style="background:#f5eadf;border-radius:14px;padding:13px 17px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div>
+              <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250" id="slh">Selected Hall</div>
+              <div style="font-size:13px;color:#5e4d46;margin-top:2px" id="sh">Grand Studio</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250" id="slp">Total Price</div>
+              <div class="display" style="font-size:20px;color:var(--wine);margin-top:2px" id="sp">—</div>
+            </div>
+          </div>
+
+          <div id="bmsg" style="display:none" class="msg"></div>
+          <button type="submit" style="width:100%;padding:14px;border-radius:16px;background:var(--wine);color:#fff;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">
+            🎫 <span id="bcb">Confirm Reservation & Pay</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Info sidebar -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:#2f1d1a;border-radius:22px;padding:22px;color:#fff">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#d8b47b;margin-bottom:6px" id="hwt">How It Works</div>
+          <div style="font-size:17px;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:14px" id="hwtl">Simple Steps</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:rgba(255,255,255,.72);line-height:1.65">
+            <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">01</span><span id="hs1">Pick a hall and your date.</span></div>
+            <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">02</span><span id="hs2">Choose how many hours you need (1–6h).</span></div>
+            <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">03</span><span id="hs3">Select an available start time slot.</span></div>
+            <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">04</span><span id="hs4">Confirm & pay. Cancel anytime for a full refund.</span></div>
+          </div>
+        </div>
+        <div style="background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:12px" id="hil">Hall Details</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:#f1dfd1;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎪</div>
+            <div>
+              <div style="font-weight:600;font-size:14px" id="ig">Grand Studio</div>
+              <div style="font-size:11px;color:var(--muted)">120 seats · Pro lighting · Full backstage</div>
+              <div style="font-size:13px;font-weight:700;color:var(--wine);margin-top:2px">150,000 تومان/hr</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div style="width:36px;height:36px;border-radius:10px;background:#f1dfd1;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎭</div>
+            <div>
+              <div style="font-weight:600;font-size:14px" id="is2">Studio 2</div>
+              <div style="font-size:11px;color:var(--muted)">30 seats · Mirrors · Sound system</div>
+              <div style="font-size:13px;font-weight:700;color:var(--wine);margin-top:2px">80,000 تومان/hr</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /pg-book -->
+
+  <!-- ════════ PAGE: MY RESERVATIONS ════════ -->
+  <div id="pg-myres" class="pg" style="padding-top:24px">
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:26px;margin-bottom:18px">
+      <p style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9b7250;margin-bottom:4px" id="mre">Your Bookings Only</p>
+      <h2 class="display" style="font-size:24px;margin-bottom:10px" id="mrt">My Reservations</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px" id="mrp">🔒 Enter your booking email — only your own reservations are shown.</p>
+      <div style="display:flex;gap:10px">
+        <input id="mrem" class="field" type="email" placeholder="sara@email.com" style="max-width:280px" onkeydown="if(event.key==='Enter')searchRes()">
+        <button onclick="searchRes()" style="padding:12px 20px;border-radius:13px;background:var(--wine);color:#fff;border:none;font-family:inherit;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap" id="mrb">View My Bookings</button>
+      </div>
+    </div>
+    <div id="mr-empty" style="background:var(--paper);border:2px dashed #d7c5b4;border-radius:22px;padding:48px 20px;text-align:center">
+      <div style="font-size:38px;margin-bottom:12px">🎟</div>
+      <div class="display" style="font-size:20px;margin-bottom:6px" id="mret">Enter your email above</div>
+      <div style="font-size:13px;color:var(--muted)" id="mres">Your reservations will appear here.</div>
+    </div>
+    <div id="mr-list"></div>
+  </div><!-- /pg-myres -->
+
+</div>
+
+<!-- CANCEL MODAL -->
+<div class="modal-bg" id="modal">
+  <div style="background:var(--paper);border-radius:24px;padding:34px 30px;max-width:400px;width:100%;box-shadow:0 24px 60px rgba(36,24,23,.22)">
+    <div style="font-size:34px;text-align:center;margin-bottom:12px">↩️</div>
+    <h3 class="display" style="font-size:22px;text-align:center;margin-bottom:8px" id="modt">Cancel Reservation?</h3>
+    <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:22px;line-height:1.7" id="modd"></p>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeModal()" style="flex:1;padding:12px;border-radius:12px;background:#f5eadf;border:none;font-family:inherit;font-weight:600;color:#5e4d46;cursor:pointer;font-size:13px" id="modk">Keep It</button>
+      <button onclick="doCancel()" style="flex:1;padding:12px;border-radius:12px;background:#f2e2e0;border:none;font-family:inherit;font-weight:600;color:#7b2932;cursor:pointer;font-size:13px" id="modc">Yes, Cancel & Refund</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LG = {
+  en:{nb:'Padmart',ns:'Guest Booking',nx:'Exit',hbadge:'🎭 Now Accepting Reservations',htitle:'Reserve Your Stage',hdesc:'Choose your duration, pick a time slot and confirm. Full refund on cancellation.',pnBook:'📅 Book a Hall',pnMyres:'📋 My Reservations',fe:'Hall Reservations',ft:'Book a Rehearsal Hall',ln:'Your Name',le:'Email',ld:'Date',lh:'Choose a Hall',hnGrand:'Grand Studio',hdGrand:'120 seats · Pro lighting',hnS2:'Studio 2',hdS2:'30 seats · Mirrors',ldur:'Duration (hours)',lts:'Start Time Slot',ltsNote:'✓ Available  |  ✗ Fully booked  |  ~ Partially blocked',slh:'Selected Hall',slp:'Total Price',bcb:'Confirm Reservation & Pay',hwt:'How It Works',hwtl:'Simple Steps',hs1:'Pick a hall and your date.',hs2:'Choose how many hours you need (1–6h).',hs3:'Select an available start time slot.',hs4:'Confirm & pay. Cancel anytime for a full refund.',hil:'Hall Details',ig:'Grand Studio',is2:'Studio 2',mre:'Your Bookings Only',mrt:'My Reservations',mrp:'🔒 Enter your booking email — only your own reservations are shown.',mrb:'View My Bookings',mret:'Enter your email above',mres:'Your reservations will appear here.',modt:'Cancel Reservation?',modk:'Keep It',modc:'Yes, Cancel & Refund',stActive:'✓ Confirmed',stCancelled:'✕ Cancelled',lGuest:'Guest',lDate:'Date',lSlot:'Time Slot',lDur:'Duration',lPaid:'Amount Paid',cancelBtn:'Cancel & Refund',refundedBtn:'Refunded',noteActive:'Cancel anytime for a full refund.',noteCancelled:'Refunded.',errName:'⚠ Please enter your name.',errEmail:'⚠ Please enter a valid email.',errDate:'⚠ Please select a date.',errSlot:'⚠ Please select a time slot.',errNoFit:'⚠ Not enough consecutive hours available from this slot.',errLimit:'⚠ Max 3 active bookings per email.',okBooked:'✓ Booking confirmed! Opening My Reservations…'},
+  fa:{nb:'پادمارت',ns:'رزرو مهمان',nx:'خروج',hbadge:'🎭 پذیرش رزرو آغاز شد',htitle:'صحنه خود را رزرو کنید',hdesc:'مدت زمان را انتخاب کنید، بازه زمانی را مشخص کنید و تأیید کنید. بازپرداخت کامل در صورت لغو.',pnBook:'📅 رزرو سالن',pnMyres:'📋 رزروهای من',fe:'رزرو سالن',ft:'رزرو سالن تمرین',ln:'نام شما',le:'ایمیل',ld:'تاریخ',lh:'انتخاب سالن',hnGrand:'گرند استودیو',hdGrand:'۱۲۰ نفر · نور حرفه‌ای',hnS2:'استودیو ۲',hdS2:'۳۰ نفر · آینه',ldur:'مدت زمان (ساعت)',lts:'بازه شروع',ltsNote:'✓ آزاد  |  ✗ رزرو شده  |  ~ نیمه پر',slh:'سالن انتخابی',slp:'قیمت کل',bcb:'تأیید رزرو و پرداخت',hwt:'نحوه عملکرد',hwtl:'مراحل ساده',hs1:'سالن و تاریخ خود را انتخاب کنید.',hs2:'تعداد ساعت مورد نیاز را انتخاب کنید (۱ تا ۶ ساعت).',hs3:'یک بازه شروع موجود را انتخاب کنید.',hs4:'تأیید و پرداخت کنید. هر زمان لغو کنید — بازپرداخت کامل.',hil:'مشخصات سالن‌ها',ig:'گرند استودیو',is2:'استودیو ۲',mre:'فقط رزروهای شما',mrt:'رزروهای من',mrp:'🔒 ایمیل رزرو خود را وارد کنید — فقط رزروهای خودتان نمایش داده می‌شود.',mrb:'مشاهده رزروهای من',mret:'ایمیل خود را وارد کنید',mres:'رزروهای شما اینجا نمایش داده می‌شود.',modt:'لغو رزرو؟',modk:'نگه داشتن',modc:'بله، لغو و بازپرداخت',stActive:'✓ تأیید شده',stCancelled:'✕ لغو شده',lGuest:'مهمان',lDate:'تاریخ',lSlot:'بازه زمانی',lDur:'مدت',lPaid:'مبلغ پرداختی',cancelBtn:'لغو و بازپرداخت',refundedBtn:'بازپرداخت شد',noteActive:'هر زمان لغو کنید — بازپرداخت کامل.',noteCancelled:'بازپرداخت شده.',errName:'⚠ لطفاً نام خود را وارد کنید.',errEmail:'⚠ لطفاً یک ایمیل معتبر وارد کنید.',errDate:'⚠ لطفاً تاریخ را انتخاب کنید.',errSlot:'⚠ لطفاً یک بازه زمانی انتخاب کنید.',errNoFit:'⚠ ساعات متوالی کافی از این بازه وجود ندارد.',errLimit:'⚠ حداکثر ۳ رزرو فعال برای هر ایمیل.',okBooked:'✓ رزرو تأیید شد! در حال باز کردن رزروهای من…'}
+};
+
+let lang = Store.getLang();
+let selHallKey = 'grand';
+let selDur = 1;
+let selStart = null;
+let pendingId = null;
+
+const t = k => LG[lang][k] || k;
+
+function applyL(l) {
+  lang = l;
+  document.body.classList.toggle('rtl', l === 'fa');
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&l==='en')||(i===1&&l==='fa')));
+  const keys=['nb','ns','nx','hbadge','htitle','hdesc','pn-book','pnMyres','fe','ft','ln','le','ld','lh','hn-grand','hd-grand','hn-s2','hd-s2','ldur','lts','lts-note','slh','slp','bcb','hwt','hwtl','hs1','hs2','hs3','hs4','hil','ig','is2','mre','mrt','mrp','mrb','mret','mres','modt','modk','modc'];
+  const ids= ['nb','ns','nx','hbadge','htitle','hdesc','pn-book','pn-myres','fe','ft','ln','le','ld','lh','hn-grand','hd-grand','hn-s2','hd-s2','ldur','lts','lts-note','slh','slp','bcb','hwt','hwtl','hs1','hs2','hs3','hs4','hil','ig','is2','mre','mrt','mrp','mrb','mret','mres','modt','modk','modc'];
+  const map={nb:'nb',ns:'ns',nx:'nx',hbadge:'hbadge',htitle:'htitle',hdesc:'hdesc','pn-book':'pnBook','pn-myres':'pnMyres',fe:'fe',ft:'ft',ln:'ln',le:'le',ld:'ld',lh:'lh','hn-grand':'hnGrand','hd-grand':'hdGrand','hn-s2':'hnS2','hd-s2':'hdS2',ldur:'ldur',lts:'lts','lts-note':'ltsNote',slh:'slh',slp:'slp',bcb:'bcb',hwt:'hwt',hwtl:'hwtl',hs1:'hs1',hs2:'hs2',hs3:'hs3',hs4:'hs4',hil:'hil',ig:'ig',is2:'is2',mre:'mre',mrt:'mrt',mrp:'mrp',mrb:'mrb',mret:'mret',mres:'mres',modt:'modt',modk:'modk',modc:'modc'};
+  Object.entries(map).forEach(([id,key])=>{const e=document.getElementById(id);if(e)e.textContent=t(key);});
+  renderDurBtns();
+  renderSlots();
+  updateSummary();
+}
+
+function setL(l) { Store.setLang(l); applyL(l); }
+
+function showPg(p) {
+  ['book','myres'].forEach(x=>{
+    document.getElementById('pg-'+x).classList.toggle('active',x===p);
+    document.getElementById('pn-'+x).classList.toggle('active',x===p);
+  });
+}
+
+// ── HALL SELECT ──
+function selHall(k) {
+  selHallKey = k; selStart = null;
+  document.getElementById('hc-grand').classList.toggle('sel', k==='grand');
+  document.getElementById('hc-studio2').classList.toggle('sel', k==='studio2');
+  renderSlots(); updateSummary();
+}
+
+// ── DURATION ──
+function renderDurBtns() {
+  const grid = document.getElementById('dur-grid');
+  grid.innerHTML = '';
+  for (let d = 1; d <= 6; d++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dur-btn' + (selDur===d?' sel':'');
+    btn.textContent = d + (lang==='fa' ? ' ساعت' : d===1 ? ' hr' : ' hrs');
+    btn.onclick = () => { selDur=d; selStart=null; renderDurBtns(); renderSlots(); updateSummary(); };
+    grid.appendChild(btn);
+  }
+}
+
+// ── SLOTS ──
+function renderSlots() {
+  const date = document.getElementById('fd').value;
+  const grid = document.getElementById('slot-grid');
+  grid.innerHTML = '';
+  Store.SLOT_STARTS.forEach(sh => {
+    const hour = parseInt(sh);
+    const endH = hour + selDur;
+    const label = `${sh}:00–${String(endH).padStart(2,'0')}:00`;
+    const fits = endH <= 21 && Store.canBook(selHallKey, date, hour, selDur);
+    const taken = !fits && !Store.canBook(selHallKey, date, hour, 1);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.className = 'slot-btn' + (selStart===hour?' sel':'') + (!fits&&taken?' taken':!fits?' partial':'');
+    btn.disabled = !fits;
+    btn.onclick = () => { selStart=hour; renderSlots(); updateSummary(); };
+    grid.appendChild(btn);
+  });
+}
+
+// ── SUMMARY ──
+function updateSummary() {
+  const h = Store.HALLS[selHallKey];
+  const name = lang==='fa' ? h.fa : h.en;
+  const price = h.price * selDur;
+  document.getElementById('sh').textContent = name + (selStart!==null ? ` · ${String(selStart).padStart(2,'0')}:00–${String(selStart+selDur).padStart(2,'0')}:00` : '');
+  document.getElementById('sp').textContent = selStart!==null ? Store.fmt(price) : '—';
+}
+
+// ── MSG ──
+function showMsg(id,txt,type){const el=document.getElementById(id);el.textContent=txt;el.className='msg msg-'+type;el.style.display='block';if(type!=='e')setTimeout(()=>el.style.display='none',5000);}
+
+// ── BOOK ──
+function doBook(e) {
+  e.preventDefault();
+  const name  = document.getElementById('fn').value.trim();
+  const email = document.getElementById('fe2').value.trim().toLowerCase();
+  const date  = document.getElementById('fd').value;
+  if (!name)                      return showMsg('bmsg',t('errName'),'e');
+  if (!email||!email.includes('@'))return showMsg('bmsg',t('errEmail'),'e');
+  if (!date)                       return showMsg('bmsg',t('errDate'),'e');
+  if (selStart===null)             return showMsg('bmsg',t('errSlot'),'e');
+  if (!Store.canBook(selHallKey,date,selStart,selDur)) return showMsg('bmsg',t('errNoFit'),'e');
+  const active = Store.getReservations().filter(r=>r.email===email&&r.status==='active').length;
+  if (active>=3) return showMsg('bmsg',t('errLimit'),'e');
+  const h = Store.HALLS[selHallKey];
+  const slotLabel = `${String(selStart).padStart(2,'0')}:00–${String(selStart+selDur).padStart(2,'0')}:00`;
+  Store.addReservation({
+    id: Store.genId(), name, email,
+    hall: selHallKey, hallEn: h.en, hallFa: h.fa,
+    date, startHour: selStart, duration: selDur,
+    slotLabel, price: h.price*selDur, status:'active',
+    bookedAt: new Date().toLocaleString()
+  });
+  showMsg('bmsg',t('okBooked'),'s');
+  document.getElementById('bform').reset();
+  initDate(); selStart=null; selDur=1;
+  renderDurBtns(); renderSlots(); updateSummary();
+  document.getElementById('mrem').value=email;
+  setTimeout(()=>{showPg('myres');searchRes();},1400);
+}
+
+// ── MY RES ──
+function searchRes() {
+  const email=(document.getElementById('mrem').value||'').trim().toLowerCase();
+  const list=document.getElementById('mr-list');
+  const empty=document.getElementById('mr-empty');
+  if(!email){empty.style.display='block';list.innerHTML='';return;}
+  const mine=Store.getByEmail(email).sort((a,b)=>b.date.localeCompare(a.date));
+  empty.style.display=mine.length?'none':'block';
+  if(!mine.length){document.getElementById('mret').textContent=lang==='fa'?'رزروی یافت نشد':'No reservations found';document.getElementById('mres').textContent=lang==='fa'?'هیچ رزروی برای این ایمیل یافت نشد.':'No bookings found for this email.';list.innerHTML='';return;}
+  list.innerHTML=mine.map(r=>resCard(r)).join('');
+}
+
+function resCard(r) {
+  const c=r.status==='cancelled';
+  const hn=lang==='fa'?r.hallFa:r.hallEn;
+  const stCls=c?'background:#f2e2e0;color:#8b2d36':'background:#e7f3ec;color:#2d7a58';
+  return `<div class="res-card${c?' cancelled':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9b7250;margin-bottom:3px">${r.id}</div>
+        <div class="display" style="font-size:20px;color:#2b1c19;margin-bottom:5px">${hn}</div>
+        <span style="display:inline-flex;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;${stCls}">${c?t('stCancelled'):t('stActive')}</span>
+      </div>
+      <div class="display" style="font-size:22px;color:var(--wine)">${Store.fmt(r.price)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;font-size:12px">
+      <div><div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250">${t('lGuest')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.name}</div></div>
+      <div><div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250">${t('lDate')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.date}</div></div>
+      <div><div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250">${t('lSlot')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.slotLabel}</div></div>
+      <div><div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9b7250">${t('lDur')}</div><div style="margin-top:2px;font-weight:500;color:#4b3932">${r.duration}h</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #eee0d3">
+      <span style="font-size:11px;color:var(--muted)">${c?t('noteCancelled'):t('noteActive')}</span>
+      <button ${c?'disabled style="opacity:.45;cursor:not-allowed"':'onclick="openModal(\''+r.id+'\')"'} style="padding:7px 14px;border-radius:9px;background:#f2e2e0;border:none;font-family:inherit;font-size:12px;font-weight:600;color:#7b2932;${c?'':'cursor:pointer'}">${c?t('refundedBtn'):t('cancelBtn')}</button>
+    </div>
+  </div>`;
+}
+
+// ── MODAL ──
+function openModal(id){
+  pendingId=id;
+  const r=Store.getReservations().find(x=>x.id===id);
+  const hn=lang==='fa'?r.hallFa:r.hallEn;
+  document.getElementById('modd').innerHTML=`${hn} · ${r.date}<br>${r.slotLabel} (${r.duration}h)<br><span style="color:var(--muted)">Refund: <strong style="color:var(--wine)">${Store.fmt(r.price)}</strong></span>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');pendingId=null;}
+function doCancel(){if(!pendingId)return;Store.cancelReservation(pendingId);closeModal();searchRes();}
+
+// ── INIT ──
+function initDate(){const d=document.getElementById('fd');d.min=new Date().toISOString().split('T')[0];if(!d.value)d.value=new Date(Date.now()+86400000).toISOString().split('T')[0];}
+
+document.getElementById('fd').addEventListener('change',()=>{selStart=null;renderSlots();updateSummary();});
+
+window.addEventListener('pm_update',()=>{renderSlots();if(document.getElementById('pg-myres').classList.contains('active'))searchRes();});
+window.addEventListener('pm_lang',()=>applyL(Store.getLang()));
+
+initDate(); applyL(lang); lucide.createIcons();
+</script>
+</body>
+</html>
