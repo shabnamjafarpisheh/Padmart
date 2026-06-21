@@ -17,15 +17,15 @@ st.set_page_config(
 #  CONSTANTS
 # ─────────────────────────────────────────────
 HALLS = {
-    "grand":   {"name_en": "Grand Studio", "name_fa": "گرند استودیو",
-                "price": 70000, "seats": 120, "icon": "🎪",
-                "desc_en": "120 seats · Pro lighting · Full backstage",
-                "desc_fa": "۱۲۰ نفر · نور حرفه‌ای · پشت صحنه",
+    "grand":   {"name_en": "Grand Studio", "name_fa": "پلاتو بزرگ",
+                "price": 70000, "icon": "🎪",
+                "desc_en": " · Pro lighting · ",
+                "desc_fa": "  · نور حرفه‌ای ·  ",
                 "color": "#6d1f2a", "light": "rgba(109,31,42,0.15)"},
-    "studio2": {"name_en": "Studio 2",     "name_fa": "استودیو ۲",
-                "price": 70000, "seats": 30,  "icon": "🎭",
-                "desc_en": "30 seats · Mirrors · Sound system",
-                "desc_fa": "۳۰ نفر · آینه · سیستم صوتی",
+    "studio2": {"name_en": "Studio 2",     "name_fa": "پلاتو ۲",
+                "price": 70000,   "icon": "🎭",
+                "desc_en": "  · Mirrors · Sound system",
+                "desc_fa": "  · آینه · سیستم صوتی",
                 "color": "#7c6fcd", "light": "rgba(124,111,205,0.15)"},
 }
 SLOT_STARTS = list(range(9, 21))   # 09:00 → 20:00 (last slot ends 21:00)
@@ -329,7 +329,7 @@ def hall_calendar(
 
     fig.update_layout(
         title=dict(
-            text=hall["icon"] + " " + hall_nm + " — " + ("Availability Calendar" if not FA else "تقویم موجودی"),
+            text=hall["icon"] + " " + hall_nm + " — " + ("Availability Calendar" if not FA else "جدول زمانبندی"),
             font=dict(family="Playfair Display, serif", size=17, color=WINE),
             x=0.5,
         ),
@@ -392,7 +392,7 @@ def hall_calendar(
         '<div style="font-size:13px;color:#5e4d46;margin-bottom:14px">'
         + ("Pick a date and start hour from the free (cream) cells above, set your duration, then confirm."
            if not FA else
-           "یک تاریخ و ساعت شروع از سلول‌های آزاد (کرم رنگ) بالا انتخاب کنید، مدت زمان را تنظیم کنید و تأیید کنید.")
+           "یک تاریخ و ساعت شروع از زمان آزاد (کرم رنگ) پایین انتخاب کنید، مدت زمان را تنظیم کنید و تأیید کنید.")
         + '</div>'
         '</div>',
         unsafe_allow_html=True
@@ -440,7 +440,7 @@ def hall_calendar(
         else:
             st.warning(
                 "No available slots for this date / duration." if not FA
-                else "هیچ بازه‌ای برای این تاریخ / مدت موجود نیست."
+                else "هیچ بازه‌ای برای این تاریخ / زمان موجود نیست."
             )
             cb_start = None
 
@@ -468,9 +468,9 @@ def hall_calendar(
         actual_email = (gemail.strip().lower() or "owner@padmart.internal") if is_owner else booking_email
 
         if cb_start is None:
-            st.markdown('<div class="msg-err">⚠ ' + ("No slot selected." if not FA else "بازه‌ای انتخاب نشده.") + "</div>", unsafe_allow_html=True)
+            st.markdown('<div class="msg-err">⚠ ' + ("No slot selected." if not FA else "زمانی انتخاب نشده.") + "</div>", unsafe_allow_html=True)
         elif not can_book(hall_key, cb_date_str, cb_start, cb_dur):
-            st.markdown('<div class="msg-err">⚠ ' + ("Slot just taken." if not FA else "بازه همین لحظه رزرو شد.") + "</div>", unsafe_allow_html=True)
+            st.markdown('<div class="msg-err">⚠ ' + ("Slot just taken." if not FA else "زمانی همین لحظه رزرو شد.") + "</div>", unsafe_allow_html=True)
         elif (not is_owner and
               len([r for r in st.session_state.reservations
                    if r["email"] == actual_email and r["status"] == "active"]) >= 5):
@@ -520,7 +520,7 @@ def booking_form(prefix, by_email, by_name, is_owner=False):
 
         hall_options = {(HALLS[k]["name_fa"] if FA else HALLS[k]["name_en"]): k
                         for k in HALLS}
-        h_label = st.selectbox("Choose a Hall" if not FA else "انتخاب سالن",
+        h_label = st.selectbox("Choose a Hall" if not FA else "انتخاب پلاتو",
                                list(hall_options.keys()), key=f"{prefix}_h")
         hall_key = hall_options[h_label]
         hall     = HALLS[hall_key]
@@ -533,12 +533,12 @@ def booking_form(prefix, by_email, by_name, is_owner=False):
 
         if avail:
             slot_map = {slot_label(s, dur): s for s in avail}
-            chosen   = st.selectbox("Start Time Slot" if not FA else "بازه شروع",
+            chosen   = st.selectbox("Start Time Slot" if not FA else "زمان شروع",
                                     list(slot_map.keys()), key=f"{prefix}_sl")
             start_hr = slot_map[chosen]
         else:
             st.warning("No available slots for this hall / date / duration." if not FA
-                       else "هیچ بازه‌ای موجود نیست.")
+                       else "هیچ وقت آزادی موجود نیست.")
             start_hr = None
 
         total    = hall["price"] * dur
@@ -550,7 +550,7 @@ def booking_form(prefix, by_email, by_name, is_owner=False):
           <div>
             <div style="font-size:10px;font-weight:600;letter-spacing:.14em;
                         text-transform:uppercase;color:#9b7250">
-              {"Selected Hall" if not FA else "سالن انتخابی"}
+              {"Selected Hall" if not FA else "پلاتو انتخابی"}
             </div>
             <div style="font-size:13px;color:#5e4d46;margin-top:2px">
               {hall["icon"]} {hall_nm} · {slot_d}
@@ -570,7 +570,7 @@ def booking_form(prefix, by_email, by_name, is_owner=False):
         """, unsafe_allow_html=True)
 
         submitted = st.form_submit_button(
-            "🎫 Confirm Reservation & Pay" if not FA else "🎫 تأیید رزرو و پرداخت",
+            "🎫 Confirm Reservation & Pay" if not FA else "🎫 تأیید رزرو و پرداخت در محل",
             use_container_width=True
         )
 
@@ -580,7 +580,7 @@ def booking_form(prefix, by_email, by_name, is_owner=False):
 
         if start_hr is None:
             st.markdown('<div class="msg-err">⚠ ' +
-                        ("No slot selected." if not FA else "بازه‌ای انتخاب نشده.") +
+                        ("No slot selected." if not FA else "زمانی انتخاب نشده.") +
                         "</div>", unsafe_allow_html=True)
         elif not can_book(hall_key, date_str, start_hr, dur):
             st.markdown('<div class="msg-err">⚠ ' +
@@ -647,8 +647,8 @@ def res_cards(res_list, pfx, show_email=False):
         meta_guest = _cell("Guest" if not FA else "مهمان", r["name"])
         meta_email = _cell("Email", r["email"]) if show_email else ""
         meta_date  = _cell("Date"  if not FA else "تاریخ",  r["date"])
-        meta_slot  = _cell("Slot"  if not FA else "بازه",   r["slot_label"])
-        meta_dur   = _cell("Dur."  if not FA else "مدت",    str(r["duration"]) + "h")
+        meta_slot  = _cell("Slot"  if not FA else "زمان",   r["slot_label"])
+        meta_dur   = _cell("Dur."  if not FA else "بازه",    str(r["duration"]) + "h")
 
         html = (
             '<div class="' + card_cls + '">'
@@ -702,7 +702,7 @@ if st.session_state.page == "gateway":
       <h1>Padmart</h1>
       <p style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;
                 color:rgba(200,169,110,.9);margin-top:4px">
-        {"Acting School · Hall Reservations" if not FA else "مدرسه بازیگری · رزرو سالن"}
+        {"Acting School · Hall Reservations" if not FA else "مدرسه بازیگری · رزرو پلاتو"}
       </p>
     </div>
     """, unsafe_allow_html=True)
@@ -715,7 +715,7 @@ if st.session_state.page == "gateway":
             {"Register" if not FA else "ثبت‌نام"}</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.65">
             {"Create an account to book halls and track your full history"
-             if not FA else "ثبت‌نام کنید تا سالن رزرو کنید و تاریخچه کامل خود را پیگیری کنید"}</div>
+             if not FA else "ثبت‌نام کن تا هم پلاتو رزرو کنی، هم به همه سوابق رزروهات دسترسی داشته باشی"}</div>
         </div>""", unsafe_allow_html=True)
         if st.button("Create Account →" if not FA else "ایجاد حساب ←", key="b_reg"):
             nav("register")
@@ -726,7 +726,7 @@ if st.session_state.page == "gateway":
             {"Sign In" if not FA else "ورود"}</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.65">
             {"Sign in to book, view your calendar and manage reservations"
-             if not FA else "وارد شوید تا رزرو کنید، تقویم خود را ببینید و رزروها را مدیریت کنید"}</div>
+             if not FA else "وارد حسابت شو تا رزرو کنی، جدول زمان‌بندیت رو ببینی و رزروهات رو مدیریت کنی"}</div>
         </div>""", unsafe_allow_html=True)
         if st.button("Sign In →" if not FA else "ورود ←", key="b_login"):
             nav("login")
@@ -746,7 +746,7 @@ if st.session_state.page == "gateway":
 
     st.markdown(f"""<p style="text-align:center;font-size:13px;color:var(--muted);margin-top:20px">
       {"Grand Studio · Studio 2 · 70,000 تومان/hr · Full Refund on Cancellation"
-       if not FA else "گرند استودیو · استودیو ۲ · ۷۰،۰۰۰ تومان/ساعت · بازپرداخت کامل در صورت لغو"}
+       if not FA else "پلاتو بزرگ · استودیو ۲ · ۷۰،۰۰۰ تومان/ساعت · بازپرداخت کامل در صورت لغو"}
     </p>""", unsafe_allow_html=True)
 
 
@@ -849,7 +849,7 @@ elif st.session_state.page == "home":
       <div class="hero-badge">🎟 {"Welcome back" if not FA else "خوش آمدید"}</div>
       <h1>{user['name']}</h1>
       <p>{"Book a hall, check the live availability calendar and manage your reservations."
-          if not FA else "سالن رزرو کنید، تقویم موجودی زنده را بررسی کنید و رزروهایتان را مدیریت کنید."}</p>
+          if not FA else "وضعیت ظرفیت‌های خالی رو به‌صورت آنلاین و لحظه‌ای بررسی کن و رزروهات رو مدیریت کن"}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -888,9 +888,9 @@ elif st.session_state.page == "home":
                 {"Simple Steps" if not FA else "مراحل ساده"}</div>
               <div style="font-size:12px;color:rgba(255,255,255,.72);line-height:1.7">
                 <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">01</span>
-                  <span>{"Check the Availability Calendar tab first." if not FA else "ابتدا تب تقویم موجودی را بررسی کنید."}</span></div>
+                  <span>{"Check the Availability Calendar tab first." if not FA else "ابتدا جدول زمان بندی را بررسی کنید."}</span></div>
                 <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">02</span>
-                  <span>{"Select a hall and set your duration." if not FA else "سالن را انتخاب کنید و مدت زمان را تنظیم کنید."}</span></div>
+                  <span>{"Select a hall and set your duration." if not FA else "پلاتو را انتخاب کنید و بازه زمان رزرو را انتخاب کنید."}</span></div>
                 <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">03</span>
                   <span>{"Only conflict-free slots are offered." if not FA else "فقط بازه‌های بدون تداخل پیشنهاد می‌شود."}</span></div>
                 <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">04</span>
@@ -898,11 +898,11 @@ elif st.session_state.page == "home":
               </div>
             </div>
             <div class="panel">
-              <div class="eyebrow" style="margin-bottom:10px">{"Hall Prices" if not FA else "قیمت سالن‌ها"}</div>
+              <div class="eyebrow" style="margin-bottom:10px">{"Hall Prices" if not FA else "قیمت پلاتوها"}</div>
               <div style="display:flex;gap:10px;margin-bottom:12px">
                 <div style="font-size:24px">🎪</div>
                 <div>
-                  <div style="font-weight:600">{"Grand Studio" if not FA else "گرند استودیو"}</div>
+                  <div style="font-weight:600">{"Grand Studio" if not FA else "پلاتو بزرگ"}</div>
                   <div style="font-size:11px;color:var(--muted)">120 seats · Pro lighting</div>
                   <div style="font-size:14px;font-weight:700;color:var(--wine)">70,000 تومان/hr</div>
                 </div>
@@ -910,7 +910,7 @@ elif st.session_state.page == "home":
               <div style="display:flex;gap:10px">
                 <div style="font-size:24px">🎭</div>
                 <div>
-                  <div style="font-weight:600">{"Studio 2" if not FA else "استودیو ۲"}</div>
+                  <div style="font-weight:600">{"Studio 2" if not FA else "پلاتو ۲"}</div>
                   <div style="font-size:11px;color:var(--muted)">30 seats · Mirrors</div>
                   <div style="font-size:14px;font-weight:700;color:var(--wine)">70,000 تومان/hr</div>
                 </div>
@@ -922,20 +922,20 @@ elif st.session_state.page == "home":
     with tab_cal:
         FA = is_fa()
         st.markdown(
-            '<div class="eyebrow">' + ("Live Availability" if not FA else "موجودی زنده") + '</div>'
+            '<div class="eyebrow">' + ("Live Availability" if not FA else "زمان‌های قابل رزرو") + '</div>'
             '<h2 style="font-family:\'Playfair Display\',serif;font-size:22px;margin-bottom:4px">'
-            + ("Hall Availability Calendar" if not FA else "تقویم موجودی سالن‌ها") +
+            + ("Hall Availability Calendar" if not FA else "جدول زمان‌های قابل رزرو") +
             '</h2>'
             '<p style="font-size:13px;color:var(--muted);margin-bottom:16px">'
             + ("Select a hall — cream cells are free. Pick a date, set duration and book directly from the calendar. Your bookings appear in gold."
                if not FA else
-               "یک سالن انتخاب کنید — سلول‌های کرم آزاد هستند. تاریخ و مدت را انتخاب کنید و مستقیم از تقویم رزرو کنید. رزروهای شما با طلایی نشان داده می‌شود.")
+               "یک پلاتو انتخاب کنید — وقت های خالی کرم رنگ هستند. تاریخ و بازه زمانی را انتخاب کنید و مستقیم از تقویم رزرو کنید. رزروهای شما با طلایی نشان داده می‌شود")
             + '</p>',
             unsafe_allow_html=True
         )
 
         sel_hall = st.radio(
-            "Hall" if not FA else "سالن",
+            "Hall" if not FA else "پلاتو",
             options=list(HALLS.keys()),
             format_func=lambda k: HALLS[k]["icon"] + " " + (HALLS[k]["name_fa"] if FA else HALLS[k]["name_en"]),
             horizontal=True,
@@ -1031,7 +1031,7 @@ elif st.session_state.page == "owner-login":
                 nav("owner")
             else:
                 st.markdown('<div class="msg-err">⚠ ' + ("Incorrect password." if not FA else "رمز عبور نادرست.") + "</div>", unsafe_allow_html=True)
-        st.markdown(f'<p style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">{"Demo:" if not FA else "رمز نمونه:"} <strong>admin123</strong></p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">{"Demo:" if not FA else " نمونه:"} <strong>admin123</strong></p>', unsafe_allow_html=True)
 
 
 # ──────────────────────────────
@@ -1069,7 +1069,7 @@ elif st.session_state.page == "owner":
         (s1, len(all_res),   "Total Bookings" if not FA else "کل رزروها"),
         (s2, len(active_res),"Active"          if not FA else "فعال"),
         (s3, f"{revenue:,}", "Revenue (تومان)" if not FA else "درآمد (تومان)"),
-        (s4, ug,             "Unique Guests"   if not FA else "مهمانان یکتا"),
+        (s4, ug,             "Unique Guests"   if not FA else "مهمانان غیرعضو"),
     ]:
         col.markdown(f'<div class="stat-card"><div class="stat-num">{val}</div><div class="stat-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
@@ -1090,17 +1090,17 @@ elif st.session_state.page == "owner":
         with lo:
             st.markdown(f"""<div class="eyebrow">{"Owner Booking" if not FA else "رزرو مدیر"}</div>
             <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:16px">
-              {"Reserve a Hall on Behalf of a Guest" if not FA else "رزرو سالن به نمایندگی از مهمان"}</h2>""",
+              {"Reserve a Hall on Behalf of a Guest" if not FA else "رزرو پلاتو به نمایندگی از مهمان"}</h2>""",
                         unsafe_allow_html=True)
             booking_form("owner", "owner@padmart.internal", "Owner", is_owner=True)
         with ro:
             st.markdown(f"""<div class="panel-dark">
-              <div class="eyebrow eyebrow-light">{"Owner Booking Note" if not FA else "نکته رزرو مدیر"}</div>
+              <div class="eyebrow eyebrow-light">{"Owner Booking Note" if not FA else "یادداشت مربوط به رزرو"}</div>
               <div style="font-size:13px;color:rgba(255,255,255,.75);line-height:1.7;margin-top:8px">
                 {"As owner you can book any hall for any guest. The reservation will appear on the "
                  "calendar and in All Reservations."
                  if not FA else
-                 "به عنوان مدیر می‌توانید هر سالنی را برای هر مهمانی رزرو کنید. رزرو در تقویم و لیست همه رزروها نمایش داده می‌شود."}
+                 "به عنوان مدیر می‌توانید هر پلاتویی را برای هر مهمانی رزرو کنید. رزرو در تقویم و لیست همه رزروها نمایش داده می‌شود."}
               </div></div>""", unsafe_allow_html=True)
 
     # ── Owner: Full Calendar ──
@@ -1109,7 +1109,7 @@ elif st.session_state.page == "owner":
         st.markdown(
             '<div class="eyebrow">' + ("Full Reservation Calendar" if not FA else "تقویم کامل رزروها") + '</div>'
             '<h2 style="font-family:\'Playfair Display\',serif;font-size:22px;margin-bottom:4px">'
-            + ("All Studios · Book Directly from Calendar" if not FA else "همه استودیوها · رزرو مستقیم از تقویم") +
+            + ("All Studios · Book Directly from Calendar" if not FA else "همه پلاتوها · رزرو مستقیم از تقویم") +
             '</h2>'
             '<p style="font-size:13px;color:var(--muted);margin-bottom:16px">'
             + ("Select a hall — X axis shows days (above), Y axis shows hours. Cream = free. You can book directly below the chart."
@@ -1119,7 +1119,7 @@ elif st.session_state.page == "owner":
             unsafe_allow_html=True
         )
         o_hall = st.radio(
-            "Hall" if not FA else "سالن",
+            "Hall" if not FA else "پلاتو",
             options=list(HALLS.keys()),
             format_func=lambda k: HALLS[k]["icon"] + " " + (HALLS[k]["name_fa"] if FA else HALLS[k]["name_en"]),
             horizontal=True, key="o_cal_hall"
@@ -1178,7 +1178,7 @@ elif st.session_state.page == "owner":
             ))
             fig.update_layout(
                 title=dict(
-                    text="Bookings by Guest" if not FA else "رزرو به تفکیک مهمان",
+                    text="Bookings by Guest" if not FA else "رزرو به تفکیک اعضا",
                     font=dict(size=14, color=WINE, family="Playfair Display, serif"), x=.5
                 ),
                 plot_bgcolor=CREAM, paper_bgcolor=CREAM,
@@ -1203,8 +1203,8 @@ elif st.session_state.page == "owner":
             sc = sum(1 for r in active_res if r["hall"] == "studio2")
             fig = pgo.Figure(pgo.Pie(
                 labels=[
-                    "Grand Studio" if not FA else "گرند استودیو",
-                    "Studio 2"     if not FA else "استودیو ۲",
+                    "Grand Studio" if not FA else "پلاتو بزرگ",
+                    "Studio 2"     if not FA else "پلاتو ۲",
                 ],
                 values=[gc, sc],
                 marker=dict(colors=[WINE, GOLD], line=dict(color="#fffaf3", width=3)),
@@ -1215,7 +1215,7 @@ elif st.session_state.page == "owner":
             ))
             fig.update_layout(
                 title=dict(
-                    text="Hall Usage" if not FA else "سهم سالن‌ها",
+                    text="Hall Usage" if not FA else "آنالیز رزرو پلاتوها",
                     font=dict(size=14, color=WINE, family="Playfair Display, serif"), x=.5
                 ),
                 plot_bgcolor=CREAM, paper_bgcolor=CREAM,
@@ -1242,7 +1242,7 @@ elif st.session_state.page == "owner":
             ))
             fig.update_layout(
                 title=dict(
-                    text="Bookings Over Time" if not FA else "روند رزرو",
+                    text="Bookings Over Time" if not FA else "آمار رزروها به تفکیک زمان",
                     font=dict(size=14, color=WINE, family="Playfair Display, serif"), x=.5
                 ),
                 plot_bgcolor=CREAM, paper_bgcolor=CREAM,
@@ -1430,7 +1430,7 @@ elif st.session_state.page == "owner":
                         st.success("Password updated!" if not FA else "رمز عبور به‌روز شد!")
         with set2:
             st.markdown(f'<div class="eyebrow">{"Email Settings" if not FA else "تنظیمات ایمیل"}</div>', unsafe_allow_html=True)
-            st.markdown(f'<h3 style="font-family:\'Playfair Display\',serif;font-size:19px;margin-bottom:14px">{"SMTP Configuration" if not FA else "پیکربندی SMTP"}</h3>', unsafe_allow_html=True)
+            st.markdown(f'<h3 style="font-family:\'Playfair Display\',serif;font-size:19px;margin-bottom:14px">{"SMTP Configuration" if not FA else "تنظیم SMTP"}</h3>', unsafe_allow_html=True)
             smtp = st.session_state.smtp
             with st.form("smtp_form"):
                 sh = st.text_input("SMTP Host" if not FA else "هاست", value=smtp["host"], placeholder="smtp.gmail.com")
@@ -1454,7 +1454,7 @@ st.markdown(f"""
   <span style="color:#c8aa92;margin:0 8px">·</span>
   <span style="font-size:13px;color:var(--muted)">
     {"Acting School · Grand Studio & Studio 2 · 70,000 تومان/hr"
-     if not FA else "مدرسه بازیگری · گرند استودیو و استودیو ۲ · ۷۰،۰۰۰ تومان/ساعت"}
+     if not FA else "مدرسه بازیگری · پلاتو بزرگ و پلاتو ۲ · ۷۰،۰۰۰ تومان/ساعت"}
   </span>
 </div>
 """, unsafe_allow_html=True)
