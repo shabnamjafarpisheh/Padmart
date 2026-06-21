@@ -1040,8 +1040,8 @@ elif st.session_state.page == "home":
                 <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">03</span>
                   <span>{"Only conflict-free slots are offered." if not FA else "فقط بازه‌های بدون تداخل پیشنهاد می‌شود."}</span></div>
                 <div style="display:flex;gap:8px"><span style="color:var(--gold);font-weight:700;flex-shrink:0">04</span>
-                  <span>{"Free cancellation up to 48 hours before your reservation. After that, the full amount will be charged.
-" if not FA else "لغو رزرو تا ۴۸ ساعت قبل رایگان است. پس از آن، مبلغ کامل دریافت می‌شود."}</span></div>
+                  <span>{"Free cancellation up to 48 hours before your reservation. After that, the full amount will be charged. " if not FA else 
+ "لغو رزرو تا ۴۸ ساعت قبل رایگان است. پس از آن، مبلغ کامل دریافت می‌شود."}</span></div>
               </div>
             </div>
             <div class="panel">
